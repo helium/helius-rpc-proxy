@@ -6,10 +6,12 @@ compatibility_date = "2022-05-03"
 workers_dev = true
 [env.staging.vars]
 AWS_REGION = "us-west-2"
-AWS_CLOUDWATCH_LOG_GROUP = "/CloudFlare/RPCProxy/Staging/Errors"
+AWS_CLOUDWATCH_LOG_GROUP_HELIUS = "/CloudFlare/HeliusRPCProxy/Staging/Errors"
+AWS_CLOUDWATCH_LOG_GROUP_TRITON = "/CloudFlare/TritonRPCProxy/Staging/Errors"
 
 [env.production]
 name = "rpc-proxy"
 [env.production.vars]
 AWS_REGION = "us-west-2"
-AWS_CLOUDWATCH_LOG_GROUP = "/CloudFlare/RPCProxy/Production/Errors"
+AWS_CLOUDWATCH_LOG_GROUP_HELIUS = "/CloudFlare/HeliusRPCProxy/Production/Errors"
+AWS_CLOUDWATCH_LOG_GROUP_TRITON = "/CloudFlare/TritonRPCProxy/Production/Errors"

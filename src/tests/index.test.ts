@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import worker from '../index';
+import worker from '../heliusHandler';
 import { errorHandler } from '../utils/errorHandler';
 
 jest.mock('../utils/errorHandler');
