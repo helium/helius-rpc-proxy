@@ -1,4 +1,4 @@
-import { Env } from './types';
+import { Env } from '../types';
 
 export const heliusHandler = async ({
 	request,
@@ -82,24 +82,30 @@ export const heliusHandler = async ({
 			const data = JSON.parse(payload);
 
 			if (data.length === 0) {
-				return new Response(null, {
-					status: 400,
-					statusText: JSON.stringify({
+				return new Response(
+					JSON.stringify({
 						jsonrpc: 2.0,
 						id: null,
 						error: { code: -32600, message: 'empty rpc batch' },
 					}),
-				});
+					{
+						status: 400,
+						statusText: 'Bad Request',
+					}
+				);
 			}
 		} catch (e) {
-			return new Response(null, {
-				status: 400,
-				statusText: JSON.stringify({
+			return new Response(
+				JSON.stringify({
 					jsonrpc: 2.0,
 					id: null,
 					error: { code: -32700, message: 'failed to parse RPC request body' },
 				}),
-			});
+				{
+					status: 400,
+					statusText: 'Bad Request',
+				}
+			);
 		}
 	}
 

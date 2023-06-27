@@ -25,7 +25,8 @@ describe('errorHandler', () => {
 		AWS_REGION: process.env.AWS_REGION,
 		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
 		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
-		AWS_CLOUDWATCH_LOG_GROUP: process.env.AWS_CLOUDWATCH_LOG_GROUP,
+		AWS_CLOUDWATCH_LOG_GROUP_HELIUS: process.env.AWS_CLOUDWATCH_LOG_GROUP_HELIUS,
+		AWS_CLOUDWATCH_LOG_GROUP_TRITON: process.env.AWS_CLOUDWATCH_LOG_GROUP_TRITON,
 	};
 
 	beforeAll(() => {
@@ -37,11 +38,15 @@ describe('errorHandler', () => {
 		jest.useRealTimers();
 	});
 
+	afterEach(() => {
+		jest.clearAllMocks();
+	});
+
 	beforeEach(() => {
 		cwMock.reset();
 	});
 
-	test('handles error properly', async () => {
+	it('it handles an error from Helius properly', async () => {
 		(createLogStreamCommandBuilder as jest.Mock).mockImplementation(
 			() => new CreateLogStreamCommand({} as CreateLogStreamCommandInput)
 		);
@@ -64,20 +69,69 @@ describe('errorHandler', () => {
 			} as unknown as Response,
 		};
 
-		await errorHandler(args);
+		await errorHandler('helius')(args);
 
-		expect(createLogStreamCommandBuilder).toBeCalledWith({
-			env: originalEnv,
-			currentDate: '2020-04-01',
-		});
-		expect(putLogEventsCommandBuilder).toBeCalledWith({
-			env: originalEnv,
-			currentDate: '2020-04-01',
-			requestMethod: args.req.method,
-			statusCode: args.res.status,
-			statusMessage: args.res.statusText,
-			responseBody: 'text',
-		});
+		expect(createLogStreamCommandBuilder).toBeCalledWith(
+			expect.objectContaining({
+				currentDate: '2020-04-01',
+				cloudWatchLogGroupByRpcProvider: originalEnv.AWS_CLOUDWATCH_LOG_GROUP_HELIUS as string,
+			})
+		);
+		expect(putLogEventsCommandBuilder).toBeCalledWith(
+			expect.objectContaining({
+				currentDate: '2020-04-01',
+				cloudWatchLogGroupByRpcProvider: originalEnv.AWS_CLOUDWATCH_LOG_GROUP_HELIUS as string,
+				requestMethod: args.req.method,
+				statusCode: args.res.status,
+				statusMessage: args.res.statusText,
+				responseBody: 'text',
+			})
+		);
+		expect(cwMock).toHaveReceivedCommand(CreateLogStreamCommand);
+		expect(cwMock).toHaveReceivedCommand(PutLogEventsCommand);
+	});
+
+	it('it handles an error from Triton properly', async () => {
+		(createLogStreamCommandBuilder as jest.Mock).mockImplementation(
+			() => new CreateLogStreamCommand({} as CreateLogStreamCommandInput)
+		);
+		(putLogEventsCommandBuilder as jest.Mock).mockImplementation(
+			() => new PutLogEventsCommand({} as PutLogEventsCommandInput)
+		);
+
+		cwMock.on(CreateLogStreamCommand).resolves({});
+		cwMock.on(PutLogEventsCommand).resolves({});
+
+		const args = {
+			env: originalEnv as Env,
+			req: {
+				method: 'method',
+			} as Request,
+			res: {
+				status: 500,
+				statusText: 'error',
+				text: async () => new Promise(resolve => resolve('text')),
+			} as unknown as Response,
+		};
+
+		await errorHandler('triton')(args);
+
+		expect(createLogStreamCommandBuilder).toBeCalledWith(
+			expect.objectContaining({
+				currentDate: '2020-04-01',
+				cloudWatchLogGroupByRpcProvider: originalEnv.AWS_CLOUDWATCH_LOG_GROUP_TRITON as string,
+			})
+		);
+		expect(putLogEventsCommandBuilder).toBeCalledWith(
+			expect.objectContaining({
+				currentDate: '2020-04-01',
+				cloudWatchLogGroupByRpcProvider: originalEnv.AWS_CLOUDWATCH_LOG_GROUP_TRITON as string,
+				requestMethod: args.req.method,
+				statusCode: args.res.status,
+				statusMessage: args.res.statusText,
+				responseBody: 'text',
+			})
+		);
 		expect(cwMock).toHaveReceivedCommand(CreateLogStreamCommand);
 		expect(cwMock).toHaveReceivedCommand(PutLogEventsCommand);
 	});

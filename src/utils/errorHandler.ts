@@ -31,25 +31,21 @@ export const errorHandler =
 			// Build CloudWatch createLogStreamCommand
 			const createLogStreamCommandArg = {
 				currentDate,
+				cloudWatchLogGroupByRpcProvider: cloudWatchLogGroup[rpcProvider],
 			};
-			const createLogStreamCommand = createLogStreamCommandBuilder(
-				createLogStreamCommandArg,
-				cloudWatchLogGroup[rpcProvider]
-			);
+			const createLogStreamCommand = createLogStreamCommandBuilder(createLogStreamCommandArg);
 
 			// Build CloudWatch putLogEventsCommand
 			const responseBody = await res.text();
 			const putLogEventsCommandArg = {
 				currentDate,
+				cloudWatchLogGroupByRpcProvider: cloudWatchLogGroup[rpcProvider],
 				requestMethod: req.method,
 				statusCode: res.status,
 				statusMessage: res.statusText,
 				responseBody: responseBody,
 			};
-			const putLogEventsCommand = putLogEventsCommandBuilder(
-				putLogEventsCommandArg,
-				cloudWatchLogGroup[rpcProvider]
-			);
+			const putLogEventsCommand = putLogEventsCommandBuilder(putLogEventsCommandArg);
 
 			// Try to create CloudWatch stream, catch error as it usually means the stream
 			// already exists, which is ok

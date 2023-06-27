@@ -1,4 +1,4 @@
-import { Env } from './types';
+import { Env } from '../types';
 
 export const tritonHandler = async ({
 	request,

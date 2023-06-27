@@ -1,7 +1,6 @@
 import 'aws-sdk-client-mock-jest';
 import { PutLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
 import { putLogEventsCommandBuilder } from '../utils/putLogEventsCommandBuilder';
-import { Env } from '../types';
 
 Date.now = jest.fn(() => 1487076708000);
 
@@ -19,13 +18,18 @@ describe('putLogEventsCommandBuilder', () => {
 		AWS_REGION: process.env.AWS_REGION,
 		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
 		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
-		AWS_CLOUDWATCH_LOG_GROUP: process.env.AWS_CLOUDWATCH_LOG_GROUP,
+		AWS_CLOUDWATCH_LOG_GROUP_HELIUS: process.env.AWS_CLOUDWATCH_LOG_GROUP_HELIUS,
+		AWS_CLOUDWATCH_LOG_GROUP_TRITON: process.env.AWS_CLOUDWATCH_LOG_GROUP_TRITON,
 	};
 
-	test('creates a command', () => {
+	afterEach(() => {
+		jest.clearAllMocks();
+	});
+
+	it('it creates a command for generating log in Helius CloudWatch log group', () => {
 		const args = {
-			env: originalEnv as Env,
 			currentDate: 'yyyy-mm-dd',
+			cloudWatchLogGroupByRpcProvider: originalEnv.AWS_CLOUDWATCH_LOG_GROUP_HELIUS as string,
 			requestMethod: 'requestMethod',
 			statusCode: 200,
 			statusMessage: 'statusMessage',
@@ -34,15 +38,43 @@ describe('putLogEventsCommandBuilder', () => {
 
 		putLogEventsCommandBuilder(args);
 
-		expect(PutLogEventsCommand).toBeCalledWith({
-			logGroupName: originalEnv.AWS_CLOUDWATCH_LOG_GROUP,
-			logStreamName: args.currentDate,
-			logEvents: [
-				{
-					timestamp: Date.now(),
-					message: `Error ${args.requestMethod} ${args.statusCode} ${args.statusMessage} ${args.responseBody}`,
-				},
-			],
-		});
+		expect(PutLogEventsCommand).toBeCalledWith(
+			expect.objectContaining({
+				logGroupName: args.cloudWatchLogGroupByRpcProvider,
+				logStreamName: args.currentDate,
+				logEvents: [
+					{
+						timestamp: Date.now(),
+						message: `Error ${args.requestMethod} ${args.statusCode} ${args.statusMessage} ${args.responseBody}`,
+					},
+				],
+			})
+		);
+	});
+
+	it('it creates a command for generating log in Triton CloudWatch log group', () => {
+		const args = {
+			currentDate: 'yyyy-mm-dd',
+			cloudWatchLogGroupByRpcProvider: originalEnv.AWS_CLOUDWATCH_LOG_GROUP_TRITON as string,
+			requestMethod: 'requestMethod',
+			statusCode: 200,
+			statusMessage: 'statusMessage',
+			responseBody: 'responseBody',
+		};
+
+		putLogEventsCommandBuilder(args);
+
+		expect(PutLogEventsCommand).toBeCalledWith(
+			expect.objectContaining({
+				logGroupName: args.cloudWatchLogGroupByRpcProvider,
+				logStreamName: args.currentDate,
+				logEvents: [
+					{
+						timestamp: Date.now(),
+						message: `Error ${args.requestMethod} ${args.statusCode} ${args.statusMessage} ${args.responseBody}`,
+					},
+				],
+			})
+		);
 	});
 });

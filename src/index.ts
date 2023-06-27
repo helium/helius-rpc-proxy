@@ -1,6 +1,6 @@
 import { Env } from './types';
-import { heliusHandler } from './heliusHandler';
-import { tritonHandler } from './tritonHandler';
+import { heliusHandler } from './rpcProviderHandlers/heliusHandler';
+import { tritonHandler } from './rpcProviderHandlers/tritonHandler';
 import { errorHandler } from './utils/errorHandler';
 import { pegRpcProviderByModulus } from './utils/pegRpcProviderByModulus';
 
