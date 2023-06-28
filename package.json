@@ -4,7 +4,7 @@
 	"scripts": {
 		"deploy": "wrangler publish src/index.ts",
 		"dev": "wrangler dev src/index.ts --local",
-		"test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
+		"test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --verbose",
 		"start-stackblitz": "WRANGLER_SEND_METRICS=false wrangler dev src/index.ts --local",
 		"lint": "npx eslint src",
 		"pretty": "npx prettier --write ."

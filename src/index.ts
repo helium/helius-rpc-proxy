@@ -14,8 +14,6 @@ export default {
 		// will return undefined and the default provider (e.g., helius) will be used.
 		const peggedRpcProvider = !RPC_PROVIDER_OVERRIDE && pegRpcProviderByModulus(request.clone());
 
-		console.log(RPC_PROVIDER_OVERRIDE, peggedRpcProvider);
-
 		if (RPC_PROVIDER_OVERRIDE === 'triton' || peggedRpcProvider === 'triton') {
 			return tritonHandler({
 				request,

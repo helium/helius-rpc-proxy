@@ -19,7 +19,7 @@ export const pegRpcProviderByModulus = (request: Request): string | undefined =>
 			peggedRpcProvider = RPC_PROVIDERS_ARR[peggedRpcProviderIndex];
 		}
 	} catch (err) {
-		//
+		// Log the error but otherwise proceed with using the "default" path
 		console.log(`pegRpcProviderByModulus error: ${err}`);
 	}
 
