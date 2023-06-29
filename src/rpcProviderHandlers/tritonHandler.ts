@@ -28,10 +28,12 @@ export const tritonHandler = async ({
 	// incoming requests to the CF worker, but if the request originates from solana-rpc.web.test-helium.com,
 	// use the Helius Solana devnet subdomains (e.g., rpc-devnet.helius.xyz, api-devnet.helius.xyz)
 	let network = 'mainnet';
+	let pool = 'maineb3-376c';
 	const headers = request.headers;
 	const host = headers.get('Host');
 	if (host == 'solana-rpc.web.test-helium.com') {
 		network = 'devnet';
+		pool = 'dev6228-c995';
 	}
 
 	// If the query string session-key value doesn't match the SESSION_KEY env variable, return 404
@@ -57,7 +59,7 @@ export const tritonHandler = async ({
 	const upgradeHeader = request.headers.get('Upgrade');
 	if (upgradeHeader || upgradeHeader === 'websocket') {
 		const res = await fetch(
-			`https://helium-maineb3-376c.${network}.rpcpool.com/${env.TRITON_API_KEY}`,
+			`https://helium-${pool}.${network}.rpcpool.com/${env.TRITON_API_KEY}`,
 			request
 		);
 
@@ -70,7 +72,7 @@ export const tritonHandler = async ({
 
 	const payload = await request.text();
 	const proxyRequest = new Request(
-		`https://helium-maineb3-376c.${network}.rpcpool.com/${env.TRITON_API_KEY}
+		`https://helium-${pool}.${network}.rpcpool.com/${env.TRITON_API_KEY}
 		}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`,
 		{
 			method: request.method,
