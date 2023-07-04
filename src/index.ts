@@ -14,9 +14,9 @@ export default {
 			'Access-Control-Allow-Headers': '*',
 		};
 
+		const origin = request.headers.get('Origin')
 		if (env.CORS_ALLOW_ORIGIN) {
-			const origin = request.headers.get('Origin')
-			if (origin && env.CORS_ALLOW_ORIGIN === origin) {
+			if (origin && env.CORS_ALLOW_ORIGIN.includes(origin)) {
 				corsHeaders['Access-Control-Allow-Origin'] = origin
 			}
 		} else {
@@ -89,6 +89,16 @@ export default {
 			}
 		}
 
+		const proxyHeaders: Record<string, string> = {
+			'Content-Type': 'application/json',
+			'X-Helius-Cloudflare-Proxy': 'true',
+			...corsHeaders,
+		}
+
+		if (origin) {
+			proxyHeaders['Origin'] = origin
+		}
+
 		const proxyRequest = new Request(
 			`https://${pathname === '/' ? rpcNetwork : apiNetwork}.helius.xyz${pathname}?api-key=${
 				env.HELIUS_API_KEY
@@ -96,11 +106,7 @@ export default {
 			{
 				method: request.method,
 				body: payload || null,
-				headers: {
-					'Content-Type': 'application/json',
-					'X-Helius-Cloudflare-Proxy': 'true',
-					...corsHeaders,
-				},
+				headers: proxyHeaders,
 			}
 		);
 
