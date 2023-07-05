@@ -23,16 +23,16 @@ export default {
 			corsHeaders['Access-Control-Allow-Origin'] = '*'
 		}
 
-		// Helius Solana mainnet subdomains (e.g., rpc.helius.xyz, api.helius.xyz) are the default for all
+		// Helius Solana mainnet domains (e.g., mainnet.helius-rpc.com, api.helius.xyz) are the default for all
 		// incoming requests to the CF worker, but if the request originates from solana-rpc.web.test-helium.com,
-		// use the Helius Solana devnet subdomains (e.g., rpc-devnet.helius.xyz, api-devnet.helius.xyz)
-		let rpcNetwork = 'rpc';
-		let apiNetwork = 'api';
+		// use the Helius Solana devnet domains (e.g., devnet.helius-rpc.com, api-devnet.helius.xyz)
+		let rpcUrl = 'mainnet.helius-rpc.com';
+		let apiUrl = 'api.helius.xyz';
 		const headers = request.headers;
 		const host = headers.get('Host');
 		if (host == 'solana-rpc.web.test-helium.com') {
-			rpcNetwork = 'rpc-devnet';
-			apiNetwork = 'api-devnet';
+			rpcUrl = 'devnet.helius-rpc.com';
+			apiUrl = 'api-devnet.helius.xyz';
 		}
 
 		// If the query string session-key value doesn't match the SESSION_KEY env variable, return 404
@@ -58,7 +58,7 @@ export default {
 		const upgradeHeader = request.headers.get('Upgrade');
 		if (upgradeHeader || upgradeHeader === 'websocket') {
 			const res = await fetch(
-				`https://${rpcNetwork}.helius.xyz/?api-key=${env.HELIUS_API_KEY}`,
+				`https://${rpcUrl}/?api-key=${env.HELIUS_API_KEY}`,
 				request
 			);
 
@@ -100,7 +100,7 @@ export default {
 		}
 
 		const proxyRequest = new Request(
-			`https://${pathname === '/' ? rpcNetwork : apiNetwork}.helius.xyz${pathname}?api-key=${
+			`https://${pathname === '/' ? rpcUrl : apiUrl}${pathname}?api-key=${
 				env.HELIUS_API_KEY
 			}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`,
 			{
