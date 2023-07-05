@@ -18,11 +18,19 @@ export const tritonHandler = async ({
 	}) => Promise<void>;
 }) => {
 	// If the request is an OPTIONS request, return a 200 response with permissive CORS headers.
-	const corsHeaders = {
-		'Access-Control-Allow-Origin': `${env.CORS_ALLOW_ORIGIN || '*'}`,
+	const corsHeaders: Record<string, string> = {
 		'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, OPTIONS',
 		'Access-Control-Allow-Headers': '*',
 	};
+	const origin = request.headers.get('Origin');
+
+	if (env.CORS_ALLOW_ORIGIN) {
+		if (origin && env.CORS_ALLOW_ORIGIN.includes(origin)) {
+			corsHeaders['Access-Control-Allow-Origin'] = origin;
+		}
+	} else {
+		corsHeaders['Access-Control-Allow-Origin'] = '*'
+	}
 
 	// Helius Solana mainnet subdomains (e.g., rpc.helius.xyz, api.helius.xyz) are the default for all
 	// incoming requests to the CF worker, but if the request originates from solana-rpc.web.test-helium.com,
@@ -71,17 +79,23 @@ export const tritonHandler = async ({
 	}
 
 	const payload = await request.text();
+	const proxyHeaders: Record<string, string> = {
+		'Content-Type': 'application/json',
+		'X-Triton-Cloudflare-Proxy': 'true',
+		...corsHeaders,
+	}
+
+	if (origin) {
+		proxyHeaders['Origin'] = origin
+	}
+	
 	const proxyRequest = new Request(
 		`https://helium-${pool}.${network}.rpcpool.com/${env.TRITON_API_KEY}
 		}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`,
 		{
 			method: request.method,
 			body: payload || null,
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Triton-Cloudflare-Proxy': 'true',
-				...corsHeaders,
-			},
+			headers: proxyHeaders,
 		}
 	);
 

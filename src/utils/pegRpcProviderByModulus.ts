@@ -5,17 +5,17 @@ export const pegRpcProviderByModulus = (request: Request): string | undefined =>
 		const RPC_PROVIDERS_ARR = ['helius', 'triton'];
 
 		const { headers } = request;
-		const deviceIdentifier = headers.get('Device-Identifier'); // The header key will need to align with what client applications provide
+		const clientIdentifier = headers.get('Client-Identifier'); // The header key will need to align with what client applications provide
 
-		// TODO: func to transform deviceIdentifier to number type based on deviceIdentifier format (e.g., uuid)
+		// TODO: func to transform clientIdentifier to number type based on clientIdentifier format (e.g., uuid)
 
-		// Only peg to RPC provider if Device-Identifer:
+		// Only peg to RPC provider if Client-Identifer:
 		// - is provided by client application
 		// - is of number type (so modulus operation won't throw)
-    // CURRRENTLY THIS BLOCK WILL NEVER BE ENTERED
-		if (deviceIdentifier && typeof deviceIdentifier === 'number') {
+    // CURRRENTLY THIS BLOCK WILL NEVER BE ENTERED 
+		if (clientIdentifier && typeof clientIdentifier === 'number') {
 			const peggedRpcProviderIndex =
-				deviceIdentifier && deviceIdentifier % RPC_PROVIDERS_ARR.length;
+				clientIdentifier && clientIdentifier % RPC_PROVIDERS_ARR.length;
 			peggedRpcProvider = RPC_PROVIDERS_ARR[peggedRpcProviderIndex];
 		}
 	} catch (err) {

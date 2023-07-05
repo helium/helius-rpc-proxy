@@ -5,6 +5,7 @@
 		"deploy": "wrangler publish src/index.ts",
 		"dev": "wrangler dev src/index.ts --local",
 		"test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --verbose",
+		"test:logs": "NODE_OPTIONS=--experimental-vm-modules npx jest --verbose",
 		"start-stackblitz": "WRANGLER_SEND_METRICS=false wrangler dev src/index.ts --local",
 		"lint": "npx eslint src",
 		"pretty": "npx prettier --write ."
@@ -19,8 +20,8 @@
 		"@types/node-fetch": "^2.6.3",
 		"@typescript-eslint/eslint-plugin": "^5.52.0",
 		"@typescript-eslint/parser": "^5.52.0",
-		"aws-sdk-client-mock": "^2.0.1",
-		"aws-sdk-client-mock-jest": "^2.1.1",
+		"aws-sdk-client-mock": "^3.0.0",
+		"aws-sdk-client-mock-jest": "^3.0.0",
 		"esbuild": "^0.16.17",
 		"eslint": "^8.34.0",
 		"eslint-config-prettier": "^8.6.0",

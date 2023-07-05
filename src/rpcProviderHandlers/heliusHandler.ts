@@ -17,17 +17,25 @@ export const heliusHandler = async ({
 		res: Response;
 	}) => Promise<void>;
 }) => {
-	// If the request is an OPTIONS request, return a 200 response with permissive CORS headers
+	// If the request is an OPTIONS request, return a 200 response with permissive CORS headers.
 	// This is required for the Helius RPC Proxy to work from the browser and arbitrary origins
 	// If you wish to restrict the origins that can access your Helius RPC Proxy, you can do so by
 	// changing the `*` in the `Access-Control-Allow-Origin` header to a specific origin.
 	// For example, if you wanted to allow requests from `https://example.com`, you would change the
 	// header to `https://example.com`.
-	const corsHeaders = {
-		'Access-Control-Allow-Origin': `${env.CORS_ALLOW_ORIGIN || '*'}`,
+	const corsHeaders: Record<string, string> = {
 		'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, OPTIONS',
 		'Access-Control-Allow-Headers': '*',
 	};
+	const origin = request.headers.get('Origin');
+
+	if (env.CORS_ALLOW_ORIGIN) {
+		if (origin && env.CORS_ALLOW_ORIGIN.includes(origin)) {
+			corsHeaders['Access-Control-Allow-Origin'] = origin;
+		}
+	} else {
+		corsHeaders['Access-Control-Allow-Origin'] = '*'
+	}
 
 	// Helius Solana mainnet subdomains (e.g., rpc.helius.xyz, api.helius.xyz) are the default for all
 	// incoming requests to the CF worker, but if the request originates from solana-rpc.web.test-helium.com,
@@ -109,6 +117,16 @@ export const heliusHandler = async ({
 		}
 	}
 
+	const proxyHeaders: Record<string, string> = {
+		'Content-Type': 'application/json',
+		'X-Helius-Cloudflare-Proxy': 'true',
+		...corsHeaders,
+	}
+
+	if (origin) {
+		proxyHeaders['Origin'] = origin
+	}
+
 	const proxyRequest = new Request(
 		`https://${pathname === '/' ? rpcNetwork : apiNetwork}.helius.xyz${pathname}?api-key=${
 			env.HELIUS_API_KEY
@@ -116,11 +134,7 @@ export const heliusHandler = async ({
 		{
 			method: request.method,
 			body: payload || null,
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Helius-Cloudflare-Proxy': 'true',
-				...corsHeaders,
-			},
+			headers: proxyHeaders,
 		}
 	);
 

@@ -1,9 +1,6 @@
 import worker from '../index';
 import { pegRpcProviderByModulus } from '../utils/pegRpcProviderByModulus';
 
-jest.mock('../utils/errorHandler');
-jest.mock('node-fetch');
-
 const { Request } = jest.requireActual('node-fetch');
 
 describe('pegRpcProviderByModulus', () => {
@@ -23,7 +20,7 @@ describe('pegRpcProviderByModulus', () => {
 		jest.clearAllMocks();
 	});
 
-	it('it returns undefined when Device-Identifier header is not present', async () => {
+	it('it returns undefined if Client-Identifier header is not present', async () => {
 		const request = new Request(
 			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
 			{
@@ -37,17 +34,17 @@ describe('pegRpcProviderByModulus', () => {
 
 		const peggedRpcProvider = pegRpcProviderByModulus(request);
 
-    expect(peggedRpcProvider).toBe(undefined);
+		expect(peggedRpcProvider).toBe(undefined);
 	});
 
-  it('it returns undefined if Device-Identifier header is a string', async () => {
+	it('it returns undefined if Client-Identifier header is a string', async () => {
 		const request = new Request(
 			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
 			{
 				method: 'POST',
 				headers: {
-					Host: 'solana-rpc.web.helium.io',
-          'Device-Identifier': 'test'
+					'Host': 'solana-rpc.web.helium.io',
+					'Client-Identifier': 'test',
 				},
 				body: JSON.stringify([]),
 			}
@@ -55,6 +52,6 @@ describe('pegRpcProviderByModulus', () => {
 
 		const peggedRpcProvider = pegRpcProviderByModulus(request);
 
-    expect(peggedRpcProvider).toBe(undefined);
+		expect(peggedRpcProvider).toBe(undefined);
 	});
 });
