@@ -7,7 +7,7 @@ describe('pegRpcProviderByModulus', () => {
 	const originalEnv = {
 		CORS_ALLOW_ORIGIN: process.env.CORS_ALLOW_ORIGIN as string,
 		HELIUS_API_KEY: process.env.HELIUS_API_KEY as string,
-		TRITON_API_KEY: process.env.HELIUS_API_KEY as string,
+		TRITON_API_KEY: process.env.TRITON_API_KEY as string,
 		SESSION_KEY: process.env.SESSION_KEY as string,
 		AWS_REGION: process.env.AWS_REGION as string,
 		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
