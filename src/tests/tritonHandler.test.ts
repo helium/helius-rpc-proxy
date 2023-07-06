@@ -48,7 +48,7 @@ describe('tritonHandler', () => {
 		const resp = await tritonHandler({ request, env: originalEnv, tritonErrorHandler });
 
 		expect(tritonErrorHandler).not.toBeCalled();
-    expect(resp.status).toBe(200);
+		expect(resp.status).toBe(200);
 	});
 
 	it('it does invoke errorHandler', async () => {
@@ -75,6 +75,6 @@ describe('tritonHandler', () => {
 		const resp = await tritonHandler({ request, env: originalEnv, tritonErrorHandler });
 
 		expect(tritonErrorHandler).toBeCalled();
-    expect(resp.status).toBe(400);
+		expect(resp.status).toBe(400);
 	});
 });
