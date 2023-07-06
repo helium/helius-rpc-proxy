@@ -18,18 +18,17 @@ export const tritonHandler = async ({
 	}) => Promise<void>;
 }) => {
 	// If the request is an OPTIONS request, return a 200 response with permissive CORS headers.
+	const origin = request.headers.get('Origin');
 	const corsHeaders: Record<string, string> = {
-		'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, OPTIONS',
+		'Access-Control-Allow-Methods': 'OPTIONS, POST, GET',
 		'Access-Control-Allow-Headers': '*',
 	};
-	const origin = request.headers.get('Origin');
-
 	if (env.CORS_ALLOW_ORIGIN) {
 		if (origin && env.CORS_ALLOW_ORIGIN.includes(origin)) {
 			corsHeaders['Access-Control-Allow-Origin'] = origin;
 		}
 	} else {
-		corsHeaders['Access-Control-Allow-Origin'] = '*'
+		corsHeaders['Access-Control-Allow-Origin'] = '*';
 	}
 
 	// Helius Solana mainnet subdomains (e.g., rpc.helius.xyz, api.helius.xyz) are the default for all
@@ -83,12 +82,12 @@ export const tritonHandler = async ({
 		'Content-Type': 'application/json',
 		'X-Triton-Cloudflare-Proxy': 'true',
 		...corsHeaders,
-	}
+	};
 
 	if (origin) {
-		proxyHeaders['Origin'] = origin
+		proxyHeaders['Origin'] = origin; // We might need to remove this
 	}
-	
+
 	const proxyRequest = new Request(
 		`https://helium-${pool}.${network}.rpcpool.com/${env.TRITON_API_KEY}
 		}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`,

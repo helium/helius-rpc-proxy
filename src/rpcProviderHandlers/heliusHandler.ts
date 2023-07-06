@@ -23,30 +23,29 @@ export const heliusHandler = async ({
 	// changing the `*` in the `Access-Control-Allow-Origin` header to a specific origin.
 	// For example, if you wanted to allow requests from `https://example.com`, you would change the
 	// header to `https://example.com`.
+	const origin = request.headers.get('Origin');
 	const corsHeaders: Record<string, string> = {
 		'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, OPTIONS',
 		'Access-Control-Allow-Headers': '*',
 	};
-	const origin = request.headers.get('Origin');
-
 	if (env.CORS_ALLOW_ORIGIN) {
 		if (origin && env.CORS_ALLOW_ORIGIN.includes(origin)) {
 			corsHeaders['Access-Control-Allow-Origin'] = origin;
 		}
 	} else {
-		corsHeaders['Access-Control-Allow-Origin'] = '*'
+		corsHeaders['Access-Control-Allow-Origin'] = '*';
 	}
 
-	// Helius Solana mainnet subdomains (e.g., rpc.helius.xyz, api.helius.xyz) are the default for all
+	// Helius Solana mainnet domains (e.g., mainnet.helius-rpc.com, api.helius.xyz) are the default for all
 	// incoming requests to the CF worker, but if the request originates from solana-rpc.web.test-helium.com,
-	// use the Helius Solana devnet subdomains (e.g., rpc-devnet.helius.xyz, api-devnet.helius.xyz)
-	let rpcNetwork = 'rpc';
-	let apiNetwork = 'api';
+	// use the Helius Solana devnet domains (e.g., devnet.helius-rpc.com, api-devnet.helius.xyz)
+	let rpcUrl = 'mainnet.helius-rpc.com';
+	let apiUrl = 'api.helius.xyz';
 	const headers = request.headers;
 	const host = headers.get('Host');
 	if (host == 'solana-rpc.web.test-helium.com') {
-		rpcNetwork = 'rpc-devnet';
-		apiNetwork = 'api-devnet';
+		rpcUrl = 'devnet.helius-rpc.com';
+		apiUrl = 'api-devnet.helius.xyz';
 	}
 
 	// If the query string session-key value doesn't match the SESSION_KEY env variable, return 404
@@ -71,10 +70,10 @@ export const heliusHandler = async ({
 
 	const upgradeHeader = request.headers.get('Upgrade');
 	if (upgradeHeader || upgradeHeader === 'websocket') {
-		const res = await fetch(
-			`https://${rpcNetwork}.helius.xyz/?api-key=${env.HELIUS_API_KEY}`,
-			request
-		);
+		const res = await fetch(`https://${rpcUrl}/?api-key=${env.HELIUS_API_KEY}`, request);
+
+		// Added because I'm unsure if this path is working after the changes to architecture 
+		console.log(res);
 
 		if (res.status >= 400) {
 			await heliusErrorHandler({ env, res: res.clone(), req: request });
@@ -121,16 +120,16 @@ export const heliusHandler = async ({
 		'Content-Type': 'application/json',
 		'X-Helius-Cloudflare-Proxy': 'true',
 		...corsHeaders,
-	}
+	};
 
 	if (origin) {
-		proxyHeaders['Origin'] = origin
+		proxyHeaders['Origin'] = origin;
 	}
 
 	const proxyRequest = new Request(
-		`https://${pathname === '/' ? rpcNetwork : apiNetwork}.helius.xyz${pathname}?api-key=${
-			env.HELIUS_API_KEY
-		}${searchParams.toString() ? `&${searchParams.toString()}` : ''}`,
+		`https://${pathname === '/' ? rpcUrl : apiUrl}${pathname}?api-key=${env.HELIUS_API_KEY}${
+			searchParams.toString() ? `&${searchParams.toString()}` : ''
+		}`,
 		{
 			method: request.method,
 			body: payload || null,
