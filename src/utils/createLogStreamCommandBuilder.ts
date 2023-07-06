@@ -1,15 +1,14 @@
-import { Env } from '../types';
 import { CreateLogStreamCommand } from '@aws-sdk/client-cloudwatch-logs';
 
 export const createLogStreamCommandBuilder = ({
-	env,
-	currentDate,
+  currentDate,
+  cloudWatchLogGroupByRpcProvider,
 }: {
-	env: Env;
-	currentDate: string;
+  currentDate: string;
+  cloudWatchLogGroupByRpcProvider: string;
 }): CreateLogStreamCommand => {
-	return new CreateLogStreamCommand({
-		logGroupName: env.AWS_CLOUDWATCH_LOG_GROUP,
-		logStreamName: currentDate,
-	});
+  return new CreateLogStreamCommand({
+    logGroupName: cloudWatchLogGroupByRpcProvider,
+    logStreamName: currentDate,
+  });
 };

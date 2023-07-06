@@ -1,110 +1,218 @@
 import fetch from 'node-fetch';
 import worker from '../index';
-import { errorHandler } from '../utils/errorHandler';
+import { pegRpcProviderByModulus } from '../utils/pegRpcProviderByModulus';
+import { heliusHandler } from '../rpcProviderHandlers/heliusHandler';
+import { tritonHandler } from '../rpcProviderHandlers/tritonHandler';
 
-jest.mock('../utils/errorHandler');
 jest.mock('node-fetch');
+jest.mock('../utils/pegRpcProviderByModulus');
+jest.mock('../rpcProviderHandlers/heliusHandler');
+jest.mock('../rpcProviderHandlers/tritonHandler');
 
-const { Response, Request } = jest.requireActual('node-fetch');
+const { Request } = jest.requireActual('node-fetch');
 
 describe('index', () => {
-	const originalEnv = {
-		CORS_ALLOW_ORIGIN: process.env.CORS_ALLOW_ORIGIN as string,
-		HELIUS_API_KEY: process.env.HELIUS_API_KEY as string,
-		SESSION_KEY: process.env.SESSION_KEY as string,
-		AWS_REGION: process.env.AWS_REGION as string,
-		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
-		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string,
-		AWS_CLOUDWATCH_LOG_GROUP: process.env.AWS_CLOUDWATCH_LOG_GROUP as string,
-	};
+  const originalEnv = {
+    CORS_ALLOW_ORIGIN: process.env.CORS_ALLOW_ORIGIN as string,
+    HELIUS_API_KEY: process.env.HELIUS_API_KEY as string,
+    TRITON_API_KEY: process.env.TRITON_API_KEY as string,
+    SESSION_KEY: process.env.SESSION_KEY as string,
+    AWS_REGION: process.env.AWS_REGION as string,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string,
+    AWS_CLOUDWATCH_LOG_GROUP_HELIUS: process.env.AWS_CLOUDWATCH_LOG_GROUP_HELIUS as string,
+    AWS_CLOUDWATCH_LOG_GROUP_TRITON: process.env.AWS_CLOUDWATCH_LOG_GROUP_TRITON as string,
+  };
 
-	test('filters requests with an empty rpc batch',async () => {
-		(errorHandler as jest.Mock).mockImplementation();
-		(fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
-			{
-				method: 'POST',
-				headers: {
-					Host: 'solana-rpc.web.helium.io',
-				},
-				body: JSON.stringify([]),
-			}
-		) as unknown as Parameters<typeof worker.fetch>[0];
+  it('it invokes the heliusHandler as default (e.g., when RPC_PROVIDER_OVERRIDE is falsy and pegRpcProviderByModulus returns undefined)', async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation(() => undefined);
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
 
-		const resp = await worker.fetch(request, originalEnv);
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
 
-		expect(resp.status).toEqual(400);
+    await worker.fetch(request, originalEnv); // RPC_PROVIDER_OVERRIDE is not in originalEnv (e.g., RPC_PROVIDER_OVERRIDE is undefined)
 
-		expect(errorHandler).not.toBeCalled();
-		expect(fetch).not.toBeCalled();
-	});
+    expect(pegRpcProviderByModulus).toHaveBeenCalled();
+    expect(heliusHandler).toHaveBeenCalled();
+    expect(tritonHandler).not.toHaveBeenCalled();
+  });
 
-	test('filters requests with an invalid json',async () => {
-		(errorHandler as jest.Mock).mockImplementation();
-		(fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+  it('it invokes the heliusHandler when request includes a path', async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation(() => undefined);
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
 
-		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
-			{
-				method: 'POST',
-				headers: {
-					Host: 'solana-rpc.web.helium.io',
-				},
-				body: '{"jsonrpc": "2.0", }',
-			}
-		) as unknown as Parameters<typeof worker.fetch>[0];
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/hello?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
 
-		const resp = await worker.fetch(request, originalEnv);
+    await worker.fetch(request, originalEnv); // RPC_PROVIDER_OVERRIDE is not in originalEnv (e.g., RPC_PROVIDER_OVERRIDE is undefined)
 
-		expect(resp.status).toEqual(400);
+    expect(heliusHandler).toHaveBeenCalled();
+    expect(tritonHandler).not.toHaveBeenCalled();
+  });
 
-		expect(errorHandler).not.toBeCalled();
-		expect(fetch).not.toBeCalled();
-	});
+  it("it invokes the heliusHandler when request includes a path and RPC_PROVIDER_OVERRIDE = 'triton'", async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation();
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
 
-	test('does not invoke errorHandler', async () => {
-		(errorHandler as jest.Mock).mockImplementation();
-		(fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue(
-			new Response(undefined, { status: 200 })
-		);
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/hello?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
 
-		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
-			{
-				method: 'POST',
-				headers: {
-					Host: 'solana-rpc.web.helium.io',
-				},
-				body: JSON.stringify({ jsonrpc: 2.0, id: "op-1", method: "getRecentBlockhash" }),
-			}
-		) as unknown as Parameters<typeof worker.fetch>[0];
+    await worker.fetch(request, { ...originalEnv, RPC_PROVIDER_OVERRIDE: 'triton' });
 
-		await worker.fetch(request, originalEnv);
+    expect(pegRpcProviderByModulus).not.toHaveBeenCalled();
+    expect(heliusHandler).toHaveBeenCalled();
+    expect(tritonHandler).not.toHaveBeenCalled();
+  });
 
-		expect(errorHandler).not.toBeCalled();
-	});
+  it("it invokes the heliusHandler when request includes a path, RPC_PROVIDER_OVERRIDE is falsy, and peggedRpcProvider = 'triton'", async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation(() => 'triton');
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
 
-	test('does invoke errorHandler', async () => {
-		(errorHandler as jest.Mock).mockImplementation();
-		(fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue(
-			new Response(undefined, { status: 400 })
-		);
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/hello?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
 
-		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
-			{
-				method: 'POST',
-				headers: {
-					Host: 'solana-rpc.web.helium.io',
-				},
-				body: JSON.stringify({ jsonrpc: 2.0, id: "op-1", method: "getRecentBlockhash" }),
-			}
-		) as unknown as Parameters<typeof worker.fetch>[0];
+    await worker.fetch(request, originalEnv); // RPC_PROVIDER_OVERRIDE is not in originalEnv (e.g., RPC_PROVIDER_OVERRIDE is undefined)
 
-		await worker.fetch(request, originalEnv);
+    expect(heliusHandler).toHaveBeenCalled();
+    expect(tritonHandler).not.toHaveBeenCalled();
+  });
 
-		expect(errorHandler).toBeCalled();
-	});
+  it("it invokes the heliusHandler when RPC_PROVIDER_OVERRIDE is falsy and peggedRpcProvider = 'helius'", async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation(() => 'helius');
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
+
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
+
+    await worker.fetch(request, originalEnv); // RPC_PROVIDER_OVERRIDE is not in originalEnv (e.g., RPC_PROVIDER_OVERRIDE is undefined)
+
+    expect(heliusHandler).toHaveBeenCalled();
+    expect(tritonHandler).not.toHaveBeenCalled();
+  });
+
+  it("it invokes the heliusHandler when RPC_PROVIDER_OVERRIDE = 'helius'", async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation();
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
+
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
+
+    await worker.fetch(request, { ...originalEnv, RPC_PROVIDER_OVERRIDE: 'helius' });
+
+    expect(pegRpcProviderByModulus).not.toHaveBeenCalled();
+    expect(heliusHandler).toHaveBeenCalled();
+    expect(tritonHandler).not.toHaveBeenCalled();
+  });
+
+  it("it invokes the tritonHandler when RPC_PROVIDER_OVERRIDE is falsy and peggedRpcProvider = 'triton'", async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation(() => 'triton');
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
+
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
+
+    await worker.fetch(request, originalEnv); // RPC_PROVIDER_OVERRIDE is not in originalEnv (e.g., RPC_PROVIDER_OVERRIDE is undefined)
+
+    expect(heliusHandler).not.toHaveBeenCalled();
+    expect(tritonHandler).toHaveBeenCalled();
+  });
+
+  it("it invokes the tritonHandler when RPC_PROVIDER_OVERRIDE = 'triton'", async () => {
+    (fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+    (pegRpcProviderByModulus as jest.Mock).mockImplementation();
+    (heliusHandler as jest.Mock).mockImplementation();
+    (tritonHandler as jest.Mock).mockImplementation();
+
+    const request = new Request(
+      `https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          Host: 'solana-rpc.web.helium.io',
+        },
+        body: JSON.stringify([]),
+      }
+    ) as unknown as Parameters<typeof worker.fetch>[0];
+
+    await worker.fetch(request, { ...originalEnv, RPC_PROVIDER_OVERRIDE: 'triton' });
+
+    expect(pegRpcProviderByModulus).not.toHaveBeenCalled();
+    expect(heliusHandler).not.toHaveBeenCalled();
+    expect(tritonHandler).toHaveBeenCalled();
+  });
 });
