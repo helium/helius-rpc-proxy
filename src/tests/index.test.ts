@@ -11,7 +11,8 @@ describe('index', () => {
 	const originalEnv = {
 		CORS_ALLOW_ORIGIN: process.env.CORS_ALLOW_ORIGIN as string,
 		HELIUS_API_KEY: process.env.HELIUS_API_KEY as string,
-		SESSION_KEY: process.env.SESSION_KEY as string,
+		SESSION_KEY_PREV: process.env.SESSION_KEY_PREV as string,
+		SESSION_KEY_CURR: process.env.SESSION_KEY_CURR as string,
 		AWS_REGION: process.env.AWS_REGION as string,
 		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
 		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string,
@@ -23,7 +24,7 @@ describe('index', () => {
 		(fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
 
 		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY_CURR}`,
 			{
 				method: 'POST',
 				headers: {
@@ -46,7 +47,7 @@ describe('index', () => {
 		(fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
 
 		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY_CURR}`,
 			{
 				method: 'POST',
 				headers: {
@@ -64,6 +65,52 @@ describe('index', () => {
 		expect(fetch).not.toBeCalled();
 	});
 
+	test('handles invalid session-key',async () => {
+		(errorHandler as jest.Mock).mockImplementation();
+		(fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+
+		const request = new Request(
+			`https://solana-rpc.web.helium.io/?session-key=fail-me`,
+			{
+				method: 'POST',
+				headers: {
+					Host: 'solana-rpc.web.helium.io',
+				},
+				body: '{"jsonrpc": "2.0", }',
+			}
+		) as unknown as Parameters<typeof worker.fetch>[0];
+
+		const resp = await worker.fetch(request, originalEnv);
+
+		expect(resp.status).toEqual(404);
+
+		expect(errorHandler).not.toBeCalled();
+		expect(fetch).not.toBeCalled();
+	});
+
+	test('handles SESSION_KEY_PREV',async () => {
+		(errorHandler as jest.Mock).mockImplementation();
+		(fetch as jest.MockedFunction<typeof fetch>).mockImplementation();
+
+		const request = new Request(
+			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY_PREV}}`,
+			{
+				method: 'POST',
+				headers: {
+					Host: 'solana-rpc.web.helium.io',
+				},
+				body: '{"jsonrpc": "2.0", }',
+			}
+		) as unknown as Parameters<typeof worker.fetch>[0];
+
+		const resp = await worker.fetch(request, originalEnv);
+
+		expect(resp.status).toEqual(404);
+
+		expect(errorHandler).not.toBeCalled();
+		expect(fetch).not.toBeCalled();
+	});
+
 	test('does not invoke errorHandler', async () => {
 		(errorHandler as jest.Mock).mockImplementation();
 		(fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue(
@@ -71,7 +118,7 @@ describe('index', () => {
 		);
 
 		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY_CURR}`,
 			{
 				method: 'POST',
 				headers: {
@@ -93,7 +140,7 @@ describe('index', () => {
 		);
 
 		const request = new Request(
-			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY}`,
+			`https://solana-rpc.web.helium.io/?session-key=${originalEnv.SESSION_KEY_CURR}`,
 			{
 				method: 'POST',
 				headers: {

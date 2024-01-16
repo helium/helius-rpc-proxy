@@ -40,10 +40,10 @@ export default {
 		// other query string params
 		const { searchParams, pathname } = new URL(request.url);
 		const sessionKey = searchParams.get('session-key');
-		if (sessionKey != env.SESSION_KEY) {
+		if (!sessionKey || ![env.SESSION_KEY_CURR, env.SESSION_KEY_PREV].includes(sessionKey)) {
 			return new Response(null, {
 				status: 404,
-				statusText: 'Unexpected path',
+				statusText: 'Invalid session key',
 			});
 		}
 		searchParams.delete('session-key');
