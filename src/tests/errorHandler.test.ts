@@ -21,8 +21,7 @@ describe('errorHandler', () => {
 	const originalEnv = {
 		CORS_ALLOW_ORIGIN: process.env.CORS_ALLOW_ORIGIN,
 		HELIUS_API_KEY: process.env.HELIUS_API_KEY,
-		SESSION_KEY_PREV: process.env.SESSION_KEY_PREV,
-		SESSION_KEY_CURR: process.env.SESSION_KEY_CURR,
+		SESSION_KEY: process.env.SESSION_KEY,
 		AWS_REGION: process.env.AWS_REGION,
 		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
 		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
