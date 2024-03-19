@@ -1,12 +1,8 @@
-name: Test and Deploy to Staging
+name: Deploy to Staging
 
 on:
   pull_request:
-    branches:
-      - develop
-  push:
-    branches:
-      - develop
+    types: [ closed ]
 
 jobs:
   tests:
@@ -19,7 +15,7 @@ jobs:
       - name: Run tests
         run: npm test
   staging:
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
+    if: github.event.pull_request.merged == true && && github.ref_name == 'develop'
     env:
       environment: staging
     runs-on: ubuntu-latest
