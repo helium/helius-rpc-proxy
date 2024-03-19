@@ -1,4 +1,4 @@
-name: Build
+name: Test and Deploy to Staging
 
 on:
   pull_request:
@@ -6,7 +6,6 @@ on:
       - develop
   push:
     branches:
-      - main
       - develop
   workflow_dispatch:
 
