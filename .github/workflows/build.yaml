@@ -21,7 +21,7 @@ jobs:
       - name: Run tests
         run: npm test
   staging:
-    if: ${{ github.event_name == 'push' && github.ref_name == 'develop' }}
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && github.ref_name == 'develop' }}
     env:
       environment: staging
     runs-on: ubuntu-latest
