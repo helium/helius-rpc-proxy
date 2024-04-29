@@ -13,6 +13,10 @@ export const errorHandler = async ({
 	res: Response;
 }): Promise<void> => {
 	try {
+		// 
+		const payload = await req.text();
+		const data = JSON.parse(payload);
+
 		// Instantiate CloudWatchLogsClient
 		const client = new CloudWatchLogsClient({
 			region: env.AWS_REGION,
@@ -43,6 +47,7 @@ export const errorHandler = async ({
 			currentDate,
 			requestMethod: req.method,
 			statusCode: res.status,
+			rpcMethod: data.method,
 			statusMessage: res.statusText,
 			responseBody: responseBody,
 		};
@@ -65,7 +70,7 @@ export const errorHandler = async ({
 		try {
 			const awsRes = await client.send(putLogEventsCommand);
 
-			const heliusResponse = `${putLogEventsCommandArg.statusCode} ${putLogEventsCommandArg.requestMethod} ${putLogEventsCommandArg.statusMessage} ${putLogEventsCommandArg.responseBody}`;
+			const heliusResponse = `${putLogEventsCommandArg.statusCode} ${putLogEventsCommandArg.requestMethod} ${putLogEventsCommandArg.statusCode} ${putLogEventsCommandArg.statusMessage} ${putLogEventsCommandArg.responseBody}`;
 
 			console.log(`Helius response: ${heliusResponse}`);
 			console.log(`CloudWatch log response: ${JSON.stringify(awsRes)}`);

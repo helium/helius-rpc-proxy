@@ -5,6 +5,7 @@ export const putLogEventsCommandBuilder = ({
 	env,
 	currentDate,
 	requestMethod,
+	rpcMethod,
 	statusCode,
 	statusMessage,
 	responseBody,
@@ -12,6 +13,7 @@ export const putLogEventsCommandBuilder = ({
 	env: Env;
 	currentDate: string;
 	requestMethod: string;
+	rpcMethod: string;
 	statusCode: number;
 	statusMessage: string;
 	responseBody: string;
@@ -22,7 +24,7 @@ export const putLogEventsCommandBuilder = ({
 		logEvents: [
 			{
 				timestamp: Date.now(),
-				message: `Error ${requestMethod} ${statusCode} ${statusMessage} ${responseBody}`,
+				message: `Error ${requestMethod} ${statusCode} ${rpcMethod} ${statusMessage} ${responseBody}`,
 			},
 		],
 	});

@@ -63,18 +63,19 @@ export default {
 			);
 
 			if (res.status >= 400) {
-				await errorHandler({ env, res: res.clone(), req: request });
+				await errorHandler({ env, res: res.clone(), req: request.clone() });
 			}
 
 			return res;
 		}
 
 		const payload = await request.text();
+		const data = JSON.parse(payload);
+
+		console.log(data.method || "Method not found");
 
 		if (request.method === 'POST') {
-			try {	
-				const data = JSON.parse(payload);
-		
+			try {			
 				if (data.length === 0) {
 					return new Response(null, {
 						status: 400,
@@ -113,7 +114,7 @@ export default {
 		const res = await fetch(proxyRequest);
 
 		if (res.status >= 400) {
-			await errorHandler({ env, res: res.clone(), req: request });
+			await errorHandler({ env, res: res.clone(), req: request.clone() });
 		}
 
 		return res;
