@@ -37,8 +37,8 @@ describe('index', () => {
 
 		expect(resp.status).toEqual(400);
 
-		expect(errorHandler).not.toBeCalled();
-		expect(fetch).not.toBeCalled();
+		expect(errorHandler).not.toHaveBeenCalled();
+		expect(fetch).not.toHaveBeenCalled();
 	});
 
 	test('filters requests with an invalid json',async () => {
@@ -60,8 +60,8 @@ describe('index', () => {
 
 		expect(resp.status).toEqual(400);
 
-		expect(errorHandler).not.toBeCalled();
-		expect(fetch).not.toBeCalled();
+		expect(errorHandler).not.toHaveBeenCalled;
+		expect(fetch).not.toHaveBeenCalled;
 	});
 
 	test('does not invoke errorHandler', async () => {
@@ -83,7 +83,7 @@ describe('index', () => {
 
 		await worker.fetch(request, originalEnv);
 
-		expect(errorHandler).not.toBeCalled();
+		expect(errorHandler).not.toHaveBeenCalled;
 	});
 
 	test('does invoke errorHandler', async () => {
@@ -105,6 +105,6 @@ describe('index', () => {
 
 		await worker.fetch(request, originalEnv);
 
-		expect(errorHandler).toBeCalled();
+		expect(errorHandler).toHaveBeenCalled;
 	});
 });

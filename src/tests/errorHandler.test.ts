@@ -56,6 +56,7 @@ describe('errorHandler', () => {
 			env: originalEnv as Env,
 			req: {
 				method: 'method',
+				text: async () => new Promise(resolve => resolve('{"method":"method"}')),
 			} as Request,
 			res: {
 				status: 500,
@@ -66,14 +67,15 @@ describe('errorHandler', () => {
 
 		await errorHandler(args);
 
-		expect(createLogStreamCommandBuilder).toBeCalledWith({
+		expect(createLogStreamCommandBuilder).toHaveBeenCalledWith({
 			env: originalEnv,
 			currentDate: '2020-04-01',
 		});
-		expect(putLogEventsCommandBuilder).toBeCalledWith({
+		expect(putLogEventsCommandBuilder).toHaveBeenCalledWith({
 			env: originalEnv,
 			currentDate: '2020-04-01',
 			requestMethod: args.req.method,
+			rpcMethod: args.req.method,
 			statusCode: args.res.status,
 			statusMessage: args.res.statusText,
 			responseBody: 'text',

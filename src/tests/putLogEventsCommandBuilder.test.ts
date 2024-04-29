@@ -28,19 +28,20 @@ describe('putLogEventsCommandBuilder', () => {
 			currentDate: 'yyyy-mm-dd',
 			requestMethod: 'requestMethod',
 			statusCode: 200,
+			rpcMethod: 'rpcMethod',
 			statusMessage: 'statusMessage',
 			responseBody: 'responseBody',
 		};
 
 		putLogEventsCommandBuilder(args);
 
-		expect(PutLogEventsCommand).toBeCalledWith({
+		expect(PutLogEventsCommand).toHaveBeenCalledWith({
 			logGroupName: originalEnv.AWS_CLOUDWATCH_LOG_GROUP,
 			logStreamName: args.currentDate,
 			logEvents: [
 				{
 					timestamp: Date.now(),
-					message: `Error ${args.requestMethod} ${args.statusCode} ${args.statusMessage} ${args.responseBody}`,
+					message: `Error ${args.requestMethod} ${args.statusCode} ${args.rpcMethod} ${args.statusMessage} ${args.responseBody}`,
 				},
 			],
 		});

@@ -3,6 +3,9 @@ import { errorHandler } from './utils/errorHandler';
 
 export default {
 	async fetch(request: Request, env: Env) {
+		// Clone Request object so it can be manipuldated in errorHandler
+		const clonedReq = request.clone();
+
 		// If the request is an OPTIONS request, return a 200 response with permissive CORS headers
 		// This is required for the Helius RPC Proxy to work from the browser and arbitrary origins
 		// If you wish to restrict the origins that can access your Helius RPC Proxy, you can do so by
@@ -63,19 +66,18 @@ export default {
 			);
 
 			if (res.status >= 400) {
-				await errorHandler({ env, res: res.clone(), req: request.clone() });
+				await errorHandler({ env, res: res.clone(), req: clonedReq });
 			}
 
 			return res;
 		}
 
 		const payload = await request.text();
-		const data = JSON.parse(payload);
-
-		console.log(data.method || "Method not found");
 
 		if (request.method === 'POST') {
 			try {			
+				const data = JSON.parse(payload);
+
 				if (data.length === 0) {
 					return new Response(null, {
 						status: 400,
@@ -114,7 +116,7 @@ export default {
 		const res = await fetch(proxyRequest);
 
 		if (res.status >= 400) {
-			await errorHandler({ env, res: res.clone(), req: request.clone() });
+			await errorHandler({ env, res: res.clone(), req: clonedReq });
 		}
 
 		return res;

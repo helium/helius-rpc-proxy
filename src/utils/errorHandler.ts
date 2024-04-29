@@ -13,9 +13,9 @@ export const errorHandler = async ({
 	res: Response;
 }): Promise<void> => {
 	try {
-		// 
+		// Extract RPC method data
 		const payload = await req.text();
-		const data = JSON.parse(payload);
+		const { method } = JSON.parse(payload);
 
 		// Instantiate CloudWatchLogsClient
 		const client = new CloudWatchLogsClient({
@@ -47,7 +47,7 @@ export const errorHandler = async ({
 			currentDate,
 			requestMethod: req.method,
 			statusCode: res.status,
-			rpcMethod: data.method,
+			rpcMethod: method,
 			statusMessage: res.statusText,
 			responseBody: responseBody,
 		};
