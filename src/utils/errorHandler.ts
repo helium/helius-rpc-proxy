@@ -70,7 +70,7 @@ export const errorHandler = async ({
 		try {
 			const awsRes = await client.send(putLogEventsCommand);
 
-			const heliusResponse = `${putLogEventsCommandArg.statusCode} ${putLogEventsCommandArg.requestMethod} ${putLogEventsCommandArg.statusCode} ${putLogEventsCommandArg.statusMessage} ${putLogEventsCommandArg.responseBody}`;
+			const heliusResponse = `${putLogEventsCommandArg.requestMethod} ${putLogEventsCommandArg.statusCode} ${putLogEventsCommandArg.rpcMethod} ${putLogEventsCommandArg.statusMessage} ${putLogEventsCommandArg.responseBody}`;
 
 			console.log(`Helius response: ${heliusResponse}`);
 			console.log(`CloudWatch log response: ${JSON.stringify(awsRes)}`);
